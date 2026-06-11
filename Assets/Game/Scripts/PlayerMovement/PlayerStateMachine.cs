@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(CharacterController)), RequireComponent(typeof(Animator))]
 public class PlayerStateMachine : StateManager<PlayerStateMachine.EPlayerStateMachine>
 {
     public enum EPlayerStateMachine 
@@ -9,15 +10,13 @@ public class PlayerStateMachine : StateManager<PlayerStateMachine.EPlayerStateMa
         Jump, Fall
     }
 
-    private PlayerContext _playerContext; // Обєкт який зберігає всі змінні для передачі їх між станами
-
-    // можна додавати змінні які потім будуть використовуватися для зміни параметрів або для IK анімації.
+    private PlayerContext _playerContext; // Обєкт який зберігає всі змінні які можуть використовувати стани які ми ініціалізуємо
     [SerializeField] private CharacterController characterController;
     [SerializeField] private Animator animator;
     [SerializeField] private InputActionReference movementInput;
     [SerializeField] private InputActionReference runInput;
     [SerializeField] private InputActionReference jumpInput;
-    [SerializeField] private P_ParametersSO playerParameters;
+    [SerializeField] private P_ParametersSO playerParameters; // for now its SO but later i think i should use json or something like that to save player progress and parameters
 
     private void Awake()
     {

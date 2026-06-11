@@ -10,7 +10,11 @@ public class P_WalkState : PlayerState
 
     public override EPlayerStateMachine GetNextState() // Return the next state based on conditions
     {
-        if (!Context.IsMoving())
+        if (Context.IsJumping())
+        {
+            return EPlayerStateMachine.Jump;
+        }
+        else if (!Context.IsMoving())
         {
             return EPlayerStateMachine.Idle; 
         }
@@ -29,7 +33,7 @@ public class P_WalkState : PlayerState
 
     public override void UpdateState()
     {
-        Context.UpdateMovementAndAnimator(1f, Context.WalkSpeed);
+        Context.UpdateMovementAndAnimator(1f, Context.WalkSpeed, 0f);
     }
 
     public override void ExitState()

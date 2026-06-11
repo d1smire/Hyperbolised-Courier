@@ -9,23 +9,45 @@ public class P_FallState : PlayerState
     }
 
     public override EPlayerStateMachine GetNextState() // Return the next state based on conditions
-    {
-        return EPlayerStateMachine.Fall;
+    {        
+        if (Context.IsGrounded)
+        {
+            if(Context.IsMoving())
+            {
+                if (Context.IsRunning())
+                {
+                    return EPlayerStateMachine.Run; 
+                }
+                else
+                {
+                    return EPlayerStateMachine.Walk; 
+                }
+            }
+            else
+            {
+                return EPlayerStateMachine.Idle; 
+            }
+        }
+        else
+        {
+            return EPlayerStateMachine.Fall;
+        }
     }
 
     public override void EnterState()
     {
-        
+        Debug.Log("Entered Fall State");
     }
 
     public override void UpdateState()
     {
-        
+        Context.UpdateMovementAndAnimator(0f, 0f, 0f); // погратися з значеннями додати перевірки чи ми рухаємося щоб мати можливість контролювати персонажа в повітрі
     }
 
     public override void ExitState()
     {
-        
+        Debug.Log("Left Fall State");
+        Context.P_Animator.SetBool("IsJump", false);
     }
 
     public override void OnTriggerEnter(Collider other) { }

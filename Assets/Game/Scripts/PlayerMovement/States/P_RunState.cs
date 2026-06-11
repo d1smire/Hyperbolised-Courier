@@ -21,6 +21,10 @@ public class P_RunState : PlayerState
                 return EPlayerStateMachine.Idle; 
             }
         }
+        else if (Context.IsJumping())
+        {
+            return EPlayerStateMachine.Jump;
+        }
         else
         {
             return EPlayerStateMachine.Run;
@@ -34,7 +38,7 @@ public class P_RunState : PlayerState
 
     public override void UpdateState()
     {
-        Context.UpdateMovementAndAnimator(2f, Context.RunSpeed);
+        Context.UpdateMovementAndAnimator(2f, Context.RunSpeed, 0f);
     }
 
     public override void ExitState()

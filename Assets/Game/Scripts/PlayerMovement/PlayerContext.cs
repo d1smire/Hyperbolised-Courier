@@ -3,18 +3,22 @@ using UnityEngine.InputSystem;
 
 public class PlayerContext
 {
-    // Variables for talking with all states
     private Animator _animator;
     private CharacterController _characterController;
+    
+    // Input actions
     private InputActionReference _movementInput;
     private InputActionReference _runInput;
-    private InputActionReference _jumpInput;
-    private P_ParametersSO _playerParameters; // Reference to the ScriptableObject for player parameters
+    private InputActionReference _jumpInput;  
 
+    private P_ParametersSO _playerParameters; // SO
+    private Vector3 _gravityVector; 
+    private bool _isJump;
 
 
     // constructor
-    public PlayerContext(Animator animator, CharacterController characterController, InputActionReference movementInput, InputActionReference runInput = null, InputActionReference jumpInput = null, P_ParametersSO playerParameters = null)
+    public PlayerContext(Animator animator, CharacterController characterController, InputActionReference movementInput, 
+    InputActionReference runInput = null, InputActionReference jumpInput = null, P_ParametersSO playerParameters = null)
      {
         _animator = animator;
         _characterController = characterController;
@@ -30,8 +34,8 @@ public class PlayerContext
     // Readonly variables
     public Animator P_Animator => _animator;
     public CharacterController P_CharacterController => _characterController;
-
     public Vector2 MovementInput => _movementInput != null ? _movementInput.action.ReadValue<Vector2>() : Vector2.zero;
+    public Vector3 GravityVector { get => _gravityVector; set => _gravityVector = value; }
 
     // Movement properties for easy access and configuration
     public float WalkSpeed { get => _playerParameters.WalkSpeed; set => _playerParameters.WalkSpeed = value; }
@@ -40,12 +44,12 @@ public class PlayerContext
     public float JumpForce { get => _playerParameters.JumpForce; set => _playerParameters.JumpForce = value; }
     public bool IsGrounded => _characterController.isGrounded;
 
-    //Testing Gemini shit
+    //Testing Gemini / variables 
     private float _currentAnimSpeed = 0f; // Змінна для збереження поточного стану анімації
 
     public bool IsMoving()
     {
-        return MovementInput.magnitude > 0.1f; // Consider as moving if input magnitude is greater than a small threshold
+        return MovementInput.magnitude > 0.1f;
     }
 
     public bool IsRunning()
@@ -53,30 +57,57 @@ public class PlayerContext
         return _runInput != null && _runInput.action.IsPressed();
     }
 
-    //Gemini code
-    public void UpdateMovementAndAnimator(float targetAnimSpeed, float moveSpeed)
+    public bool IsJumping()
     {
-        // 1. Рух персонажа в просторі
-        Vector2 input = MovementInput;
-        Vector3 moveDirection = Vector3.zero;
-
-        if (input.magnitude > 0.1f)
-        {
-            moveDirection = new Vector3(input.x, 0, input.y).normalized;
-            // Тут за бажанням можна додати поворот персонажа в сторону руху:
-            // _characterController.transform.forward = moveDirection;
-        }
-
-        // Рухаємо CharacterController (поки що без гравітації, як ти просив)
-        P_CharacterController.Move(moveDirection * moveSpeed * Time.deltaTime);
-
-        // 2. Плавне змішування анімацій (Раніше персонаж смикався, тепер ні)
-        // Збільшуючи або зменшуючи число 5f, ти регулюєш інертність (плавність) анімації
-        _currentAnimSpeed = Mathf.MoveTowards(_currentAnimSpeed, targetAnimSpeed, Time.deltaTime * 5f);
-        
-        // Передаємо фінальне плавне значення в єдиний параметр аніматора
-        P_Animator.SetFloat("Speed", _currentAnimSpeed);
+        _isJump = _jumpInput != null && _jumpInput.action.IsPressed() && IsGrounded;
+        return _isJump;
     }
 
+    //Testing Gemini / methods
+    public void UpdateMovementAndAnimator(float targetAnimSpeed, float moveSpeed, float jumpForce)
+    {
+        // 1. Зчитуємо інпут та створюємо вектор руху (по X та Z)
+        Vector2 input = MovementInput;
+        Vector3 moveDirection = new Vector3(input.x, 0f, input.y).normalized;
 
+        // 2. Поворот персонажа (якщо є рух)
+        if (input.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            P_CharacterController.transform.rotation = Quaternion.RotateTowards(
+                P_CharacterController.transform.rotation, 
+                targetRotation, 
+                Time.deltaTime * 500f
+            );
+        }
+
+        if(_isJump)
+        {
+            _gravityVector.y = jumpForce;
+        }
+
+        // 3. Розрахунок кінцевого вектора швидкості
+        // Множимо напрямок руху на швидкість
+        Vector3 finalVelocity = moveDirection * moveSpeed;
+
+        // Оновлюємо внутрішній GravityVector залежно від заземлення
+        if (!IsGrounded && !_isJump)
+        {
+            _gravityVector.y += Gravity * Time.deltaTime;
+        }
+        else if (_gravityVector.y < 0) // додаємо умову, щоб не скидати під час стрибка
+        {
+            _gravityVector.y = -2f; 
+        }
+
+        // Додаємо гравітацію (вісь Y) до нашого загального вектора руху
+        finalVelocity.y = _gravityVector.y;
+
+        // 4. ОДИН єдиний виклик Move для всього руху!
+        P_CharacterController.Move(finalVelocity * Time.deltaTime);
+
+        // 5. Анімації
+        _currentAnimSpeed = Mathf.MoveTowards(_currentAnimSpeed, targetAnimSpeed, Time.deltaTime * 5f);
+        P_Animator.SetFloat("Speed", _currentAnimSpeed);
+    }
 }
