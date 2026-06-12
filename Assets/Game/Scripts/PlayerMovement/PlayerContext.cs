@@ -14,6 +14,8 @@ public class PlayerContext
     private P_ParametersSO _playerParameters; // SO
     private Vector3 _gravityVector; 
     private bool _isJump;
+    private float _inAirControlMultiplier = 0.75f;
+    private float _inAirMoveSpeed = 0f;
 
 
     // constructor
@@ -43,6 +45,7 @@ public class PlayerContext
     public float Gravity { get => _playerParameters.Gravity; set => _playerParameters.Gravity = value; }
     public float JumpForce { get => _playerParameters.JumpForce; set => _playerParameters.JumpForce = value; }
     public bool IsGrounded => _characterController.isGrounded;
+    public float InAirSpeed { get => _inAirMoveSpeed; set => _inAirMoveSpeed = value; }
 
     //Testing Gemini / variables 
     private float _currentAnimSpeed = 0f; // Змінна для збереження поточного стану анімації
@@ -61,6 +64,18 @@ public class PlayerContext
     {
         _isJump = _jumpInput != null && _jumpInput.action.IsPressed() && IsGrounded;
         return _isJump;
+    }
+
+    public void SetInAirSpeed()
+    {
+        if (IsMoving())
+        {
+            _inAirMoveSpeed = IsRunning() ? RunSpeed * _inAirControlMultiplier : WalkSpeed * _inAirControlMultiplier;
+        }
+        else
+        {
+            _inAirMoveSpeed = 0f;
+        }
     }
 
     //Testing Gemini / methods
@@ -109,5 +124,6 @@ public class PlayerContext
         // 5. Анімації
         _currentAnimSpeed = Mathf.MoveTowards(_currentAnimSpeed, targetAnimSpeed, Time.deltaTime * 5f);
         P_Animator.SetFloat("Speed", _currentAnimSpeed);
+        SetInAirSpeed();
     }
 }

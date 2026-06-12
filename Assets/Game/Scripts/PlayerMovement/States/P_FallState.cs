@@ -41,7 +41,7 @@ public class P_FallState : PlayerState
 
     public override void UpdateState()
     {
-        Context.UpdateMovementAndAnimator(0f, 0f, 0f); // погратися з значеннями додати перевірки чи ми рухаємося щоб мати можливість контролювати персонажа в повітрі
+        Context.UpdateMovementAndAnimator(0f, Context.InAirSpeed, 0f); // погратися з значеннями додати перевірки чи ми рухаємося щоб мати можливість контролювати персонажа в повітрі
     }
 
     public override void ExitState()
